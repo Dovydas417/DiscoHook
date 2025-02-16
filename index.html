@@ -1,1 +1,92 @@
-Negro (works)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DiscoBot Control Panel</title>
+<style>
+    body { font-family: Arial, sans-serif; background-color: #121212; color: #ffffff; }
+    .container { max-width: 600px; margin: auto; padding: 20px; }
+    input, button { width: 100%; padding: 10px; margin-top: 5px; }
+    button { background-color: #0d6efd; color: white; border: none; cursor: pointer; }
+    button:disabled { background-color: #cccccc; }
+    .dark-mode { background-color: #333; color: #fff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>DiscoBot Control Panel</h1>
+    <input type="text" id="webhookUrl" placeholder="Enter Discord Webhook URL">
+    <button onclick="fetchWebhookInfo()">Fetch Webhook Info</button>
+    <div id="webhookInfo"></div>
+    <input type="text" id="message" placeholder="Enter message to send">
+    <input type="text" id="senderName" placeholder="Sender's Name">
+    <input type="text" id="senderAvatar" placeholder="Sender's Avatar URL" value="https://discord.com/assets/1c8a54f25d101bdc607cec7228247a9a.png">
+    <input type="number" id="delay" placeholder="Delay between messages in milliseconds">
+    <button onclick="startSpamming()">Start Spamming</button>
+    <button onclick="stopSpamming()" disabled id="stopButton">Stop Spamming</button>
+</div>
+<script>
+    let timeoutId;
+    let isSpamming = false;
+
+    function fetchWebhookInfo() {
+        const webhookUrl = document.getElementById('webhookUrl').value;
+        fetch(webhookUrl)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('webhookInfo').innerHTML = `<p>Webhook Name: ${data.name}</p><p>Channel ID: ${data.channel_id}</p>`;
+            })
+            .catch(() => alert('Invalid Webhook URL'));
+    }
+
+    function sendMessage() {
+        const webhookUrl = document.getElementById('webhookUrl').value;
+        const message = document.getElementById('message').value;
+        const name = document.getElementById('senderName').value;
+        const avatar = document.getElementById('senderAvatar').value;
+        const delay = parseInt(document.getElementById('delay').value);
+
+        if (!webhookUrl || !message || !name || isNaN(delay)) {
+            alert('Please fill all fields correctly');
+            stopSpamming();
+            return;
+        }
+
+        fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: message, username: name, avatar_url: avatar })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to send message');
+            }
+            console.log('Message sent successfully');
+        })
+        .catch(error => {
+            console.error('Error sending message:', error);
+            stopSpamming();
+        })
+        .finally(() => {
+            if (isSpamming) {
+                timeoutId = setTimeout(sendMessage, delay); // Recursively call sendMessage after delay
+            }
+        });
+    }
+
+    function startSpamming() {
+        if (isSpamming) return; // Prevent multiple starts
+        isSpamming = true;
+        document.getElementById('stopButton').disabled = false;
+        sendMessage(); // Start the first message
+    }
+
+    function stopSpamming() {
+        isSpamming = false;
+        clearTimeout(timeoutId); // Stop the recursive timeout
+        document.getElementById('stopButton').disabled = true;
+    }
+</script>
+</body>
+</html>
