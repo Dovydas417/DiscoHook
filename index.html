@@ -30,6 +30,24 @@
             margin-bottom: 30px;
         }
 
+        .input-field {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #ffd700;
+            color: #ffd700;
+            font-size: 1.2em;
+            padding: 10px 15px;
+            width: 250px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            border-bottom: 2px solid #ffd700;
+        }
+
         .gen-key-button {
             background: transparent;
             border: 2px solid #ffd700;
@@ -40,6 +58,9 @@
             transition: all 0.3s ease;
             display: none;
             margin-top: 20px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .gen-key-button:hover {
@@ -59,6 +80,7 @@
 <body>
     <div class="container">
         <h1>Golden-Keys</h1>
+        <input type="password" class="input-field" placeholder="Input password >" id="password-field">
         <button class="gen-key-button" id="gen-key-button">Gen-Key</button>
         <div class="generated-key" id="generated-key"></div>
         <div id="cooldown-message" style="display: none; color: red; margin-top: 20px;">Cooldown active. Try again later.</div>
@@ -66,12 +88,20 @@
 
     <script>
         const webhookURL = "https://discord.com/api/webhooks/1340670831465857075/3UM2TxnTPdo7vnS4MgqfoOVYL0LbrkNmPF943Arw6D198pkDbYvX_X9Dr7Bo0at5NzpE";
+        const password = "44hf4gh4fg98h4fg787h898^&%GOLDENKEYGEN4554654569845fg4dfg56";
+        const passwordField = document.getElementById('password-field');
         const genKeyButton = document.getElementById('gen-key-button');
         const generatedKey = document.getElementById('generated-key');
         const cooldownMessage = document.getElementById('cooldown-message');
-        const cooldownTime = 60 * 60 * 1000; // 1 hour cooldown in milliseconds
-
+        const cooldownTime = 60 * 60 * 1000;
         let lastGeneratedTime = localStorage.getItem('lastGeneratedTime');
+
+        passwordField.addEventListener('keyup', function(e) {
+            if (e.target.value === password) {
+                passwordField.style.display = 'none';
+                genKeyButton.style.display = 'block';
+            }
+        });
 
         if (lastGeneratedTime && Date.now() - lastGeneratedTime < cooldownTime) {
             genKeyButton.style.display = 'none';
@@ -90,6 +120,7 @@
             generatedKey.textContent = key;
             generatedKey.style.display = 'block';
             sendToWebhook(key);
+            storeGeneratedKey(key);
 
             lastGeneratedTime = Date.now();
             localStorage.setItem('lastGeneratedTime', lastGeneratedTime);
@@ -121,6 +152,10 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ content: `Generated Key: ${key}` })
             });
+        }
+
+        function storeGeneratedKey(key) {
+            localStorage.setItem('generatedKey', key);
         }
     </script>
 </body>
